@@ -69,6 +69,21 @@ inline var operator/(const var& vec,double value){
 	return result;
 }
 
+// += operator
+inline var operator+=(var& vec, const var& vec1) {
+	
+	for (int i = 0; i < vec.data.size(); ++i) {
+		vec.data[i] += vec1.data[i];
+	}
+	return vec;
+}
+inline var operator+=(var& vec, double value) {
+	for (int i = 0; i < vec.data.size(); ++i) {
+		vec.data[i] += value;
+	}
+	return vec;
+}
+
 // double +-*/ var
 inline var operator+(double value,const var& vec){
         var result = vec;
@@ -181,6 +196,30 @@ inline var mod(const var& vec,double mod) {
 	return result;
 }
 
+inline var round(const var& vec) {
+	var result = vec;
+	for (int i = 0; i < vec.data.size(); ++i) {
+		result.data[i] = std::round(vec.data[i]);
+	}
+	return result;
+}
+
+inline var abs(const var& vec) {
+	var result = vec;
+	for (int i = 0; i < vec.data.size(); ++i) {
+		result.data[i] = std::fabs(vec.data[i]);
+	}
+	return result;
+}
+
+inline var floor(const var& vec){
+	var result = vec;
+	for (int i = 0; i < vec.data.size(); ++i) {
+		result.data[i] = std::floor(vec.data[i]);
+	}
+	return result;
+}
+
 
 
 inline var tanh(const var& vec){
@@ -206,6 +245,15 @@ inline double mtof(double note){
 	return  (a/32)*std::pow(2,((note - 9)/12.0));
 }
 
+inline var mtof(const var& note) {
+	var result = note;
+	double a = 440;
+	for (int i = 0; i < note.data.size(); ++i) {
+		double note_i = note.data[i];
+		result.data[i] = (a / 32) * std::pow(2,((note_i - 9) / 12.0));
+	}
+	return result;
+}
 
 inline var mtof(const var& note,const var& index){
 	var result=index;

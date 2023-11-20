@@ -32,7 +32,16 @@ class  var{
   const double& operator[](size_t index){
     return data[index];
   }
- 
+  var operator[](const var& index) {
+      var result = index;
+      for (int i = 0; i < index.data.size(); ++i) {
+          std::size_t index_i = static_cast<std::size_t>(index.data[i]);
+          if (index_i < 0) { index_i = 0; }
+          if (index_i > data.size()) { index_i = data.size() - 1; }
+          result.data[i] = data[index_i];
+      }
+      return result;
+  }
 };
 
 inline double wrap(double value){
@@ -58,6 +67,8 @@ public:
   var noise();
   var rect(const var& frequency);
   var rect(double frequency);
+  var table(const var& table, const var& frequency);
+  var table(const var& table, double frequency);
  private:
  // int block=Config::blocksize;
   int blocksize=BUFFER_SIZE;

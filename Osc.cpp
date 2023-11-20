@@ -2,7 +2,7 @@
 #include "Osc.h"
 
 
-int BUFFER_SIZE = 256;
+int BUFFER_SIZE = 32;
 int SAMPLE_RATE =  48000;
 
 
@@ -66,7 +66,7 @@ var Osc::osc(double frequency){
 	freq[i]=frequency;
    }
    for(int i=0;i<blocksize;++i){
-	float ad = freq[i] /samplerate;
+	double ad = freq[i] /samplerate;
         fr +=ad;
         fr =wrap(fr);
         result.data[i] = sin(fr*TWOPI);
@@ -78,7 +78,7 @@ var Osc::osc(double frequency){
 var Osc::phasor(double frequency){
     var result(blocksize);
     for(int i=0;i<blocksize;++i){
-	float ad = frequency /samplerate;
+	double ad = frequency /samplerate;
 	fr +=ad;
 	fr = wrap(fr);
         result.data[i] = fr;
@@ -109,6 +109,40 @@ var Osc::rect(double frequency) {
 		else {
 			result.data[i] = -1.0;
 		}
+	}
+	return result;
+}
+
+var Osc::table(const var& table, const var& frequency) {
+	var result(blocksize);
+	for (int i = 0; i < blocksize; ++i) {
+		double ad = frequency.data[i] / samplerate;
+		fr += ad;
+		fr = wrap(fr);
+		double buf_pos_f = fr * table.data.size();
+		int buf_pos_i = std::floor(fr * table.data.size());
+		double buf_frac = buf_pos_f - buf_pos_i;
+		int buf_pos_2 = (buf_pos_i + 1 + table.data.size()) % table.data.size();
+		double tab_val_1 = table.data[buf_pos_i];
+		double tab_val_2 = table.data[buf_pos_2];
+		result.data[i] = tab_val_1 + buf_frac * (tab_val_2 - tab_val_1);
+	}
+	return result;
+}
+
+var Osc::table(const var& table, double frequency) {
+	var result(blocksize);
+	for (int i = 0; i < blocksize; ++i) {
+		double ad = frequency / samplerate;
+		fr += ad;
+		fr = wrap(fr);
+		double buf_pos_f = fr * table.data.size();
+		int buf_pos_i = std::floor(fr * table.data.size());
+		double buf_frac = buf_pos_f - buf_pos_i;
+		int buf_pos_2 = (buf_pos_i + 1 + table.data.size()) % table.data.size();
+		double tab_val_1 = table.data[buf_pos_i];
+		double tab_val_2 = table.data[buf_pos_2];
+		result.data[i] = tab_val_1 + buf_frac * (tab_val_2 - tab_val_1);
 	}
 	return result;
 }
@@ -156,7 +190,7 @@ var Del::read(const var& del_time) {
 		int del_int = floor(del_samps);
 		double frac = del_samps - del_int;
 		int r1 = (index - del_int + buf_size + i) % buf_size;
-		int r2 = (r1 - 1 + buf_size) % buf_size;
+		int r2 = (r1 + 1 + buf_size) % buf_size;
 		double y1 = buffer[r1];
 		double y2 = buffer[r2];
 		result.data[i] = y1 + frac*(y2 - y1);
@@ -382,12 +416,15 @@ Fn::Fn() {
 var Fn::sah(const var& input, const var& mod, double border) {
 	var result = input;
 	for (int i = 0; i < input.data.size(); ++i) {
-		double diff = (border - mod.data[i]) * (border - pre_val);
-		if (diff <= 0.0) {
+		double trigval = mod.data[i];
+		double flag_val = (border - trigval) * (border - pre_val);
+		if ((border - pre_val)<=0 && (border-trigval)>0 ) {
 			sah_val = input.data[i];
+			result.data[i] = sah_val;
+		}else {
+			result.data[i] = sah_val;
 		}
-		result.data[i] = sah_val;
-		pre_val = input.data[i];
+		pre_val = trigval;
 	}
 	return result;
 }
